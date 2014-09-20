@@ -5,7 +5,8 @@ import glob
 
 import pkg_resources
 
-from imhotep.repomanagers import ShallowRepoManager, RepoManager
+from imhotep.repomanagers import (
+    TravisRepoManager, ShallowRepoManager, RepoManager)
 from .reporters.printing import PrintingReporter
 from .reporters.github import CommitReporter, PRReporter
 from .diff_parser import DiffContextParser
@@ -146,7 +147,9 @@ def gen_imhotep(**kwargs):
     plugins = load_plugins()
     tools = get_tools(kwargs['linter'], plugins)
 
-    if kwargs['shallow']:
+    if kwargs['travis']:
+        Manager = TravisRepoManager
+    elif kwargs['shallow']:
         Manager = ShallowRepoManager
     else:
         Manager = RepoManager
@@ -246,5 +249,9 @@ def parse_args(args):
         '--shallow',
         help="Performs a shallow clone of the repo",
         action="store_true")
+    arg_parser.add_argument(
+        '--travis',
+        help='Run in a Travis environment.',
+        action='store_true')
     # parse out repo name
     return arg_parser.parse_args(args)

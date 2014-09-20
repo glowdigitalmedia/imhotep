@@ -116,3 +116,17 @@ class ShallowRepoManager(RepoManager):
         self.fetch(dirname, 'origin', 'HEAD')
         self.fetch(dirname, remote_name, ref)
         return repo
+
+
+class TravisRepoManager(RepoManager):
+    def __init__(self, *args, **kwargs):
+        super(TravisRepoManager, self).__init__(*args, **kwargs)
+        self.should_cleanup = False
+
+    def clone_dir(self, repo_name):
+        return os.environ['TRAVIS_BUILD_DIR']
+
+    def clone_repo(self, repo_name, remote_repo, ref):
+        self.shallow_clone = False
+        _, repo = self.set_up_clone(repo_name, remote_repo)
+        return repo

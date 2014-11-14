@@ -24,27 +24,37 @@ def run(cmd, cwd='.'):
         [cmd], stdout=subprocess.PIPE, shell=True, cwd=cwd).communicate()[0]
 
 
-def find_config(dirname, config_filenames):
-    configs = []
-    for filename in config_filenames:
-        configs += glob.glob('%s/%s' % (dirname, filename))
-    return set(configs)
+def get_config_path(dirname, config_filename):
+    try:
+        return glob.glob('%s/%s' % (dirname, config_filename))[0]
+    except IndexError:
+        return
 
 
-def run_analysis(repo, filenames=set(), linter_configs=set()):
+def run_analysis(repo, filenames=None):
     results = {}
     for tool in repo.tools:
         log.debug("running %s" % tool.__class__.__name__)
-        configs = {}
+        tool_args = [repo.dirname, filenames]
+
         try:
-            configs = tool.get_configs()
+            # Config filename should be set in the tool
+            config = tool.config
         except AttributeError:
             pass
-        linter_configs = find_config(repo.dirname, configs)
-        log.debug("Tool configs %s, found configs %s", configs, linter_configs)
-        run_results = tool.invoke(repo.dirname,
-                                  filenames=filenames,
-                                  linter_configs=linter_configs)
+        else:
+            config_path = get_config_path(repo.dirname, config)
+            if config_path:
+                tool_args.append(config_path)
+                log.debug(
+                    "Tool config %s, found config %s", config, config_path
+                )
+            else:
+                log.warning(
+                    "Tool config '%s' not found at repo root directory!"
+                )
+
+        run_results = tool.invoke(*tool_args)
         results.update(run_results)
     return results
 

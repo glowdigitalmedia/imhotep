@@ -140,9 +140,12 @@ class Imhotep(object):
                     violating_lines)
                 for x in matching_numbers:
                     error_count += 1
-                    reporter.report_line(
+                    response = reporter.report_line(
                         repo.name, cinfo.origin, entry.result_filename,
                         x, pos_map[x], violations['%s' % x])
+                    if response.status_code >= 400:
+                        log.error("Error when posting line to github. %s", response.json)
+                        break
 
                 log.info("%d violations.", error_count)
         finally:

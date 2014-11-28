@@ -9,4 +9,3 @@ python-coveralls
 mock
 # pdbpp
 six
-pep8
